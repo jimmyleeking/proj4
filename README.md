@@ -8,7 +8,7 @@ The original library (MIT licensed) can be found at https://github.com/OSGeo/pro
 
 ## Install
 
-	go get github.com/xeonx/proj4
+	go get github.com/jimmyleeking/proj4
 
 ## Docs
 

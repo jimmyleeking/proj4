@@ -15,6 +15,7 @@ folder.
 package proj
 
 // #cgo windows CFLAGS: -DHAVE_LOCALECONV
+// #cgo LDFLAGS: -lm
 // #include "proj_api.h"
 import "C"
 
@@ -26,14 +27,14 @@ import (
 	"github.com/xeonx/geom"
 )
 
-//Proj represents a coordinate reference system.
-//It is not safe for concurent use
+// Proj represents a coordinate reference system.
+// It is not safe for concurent use
 type Proj struct {
 	proj C.projPJ
 	ctx  C.projCtx
 }
 
-//InitPlus initializes a new projection from a proj4 plus string (eg. "+init=epsg:4326" )
+// InitPlus initializes a new projection from a proj4 plus string (eg. "+init=epsg:4326" )
 func InitPlus(definition string) (*Proj, error) {
 
 	ctx := C.pj_ctx_alloc()
@@ -65,7 +66,7 @@ func closeProj(p *Proj) {
 	p.Close()
 }
 
-//Close deallocates the projection immediately. Otherwise, it will be deallocated on garbage collection.
+// Close deallocates the projection immediately. Otherwise, it will be deallocated on garbage collection.
 func (p *Proj) Close() {
 	if p.proj != nil {
 		C.pj_free(p.proj)
@@ -77,23 +78,23 @@ func (p *Proj) Close() {
 	}
 }
 
-//IsLatLong returns whether the projection is geographic
+// IsLatLong returns whether the projection is geographic
 func (p *Proj) IsLatLong() bool {
 	return C.pj_is_latlong(p.proj) != 0
 }
 
-//IsGeoCent returns whether the projection is geocentric
+// IsGeoCent returns whether the projection is geocentric
 func (p *Proj) IsGeoCent() bool {
 	return C.pj_is_geocent(p.proj) != 0
 }
 
-//GetDef returns an initialization string suitable for use with InitPlus
+// GetDef returns an initialization string suitable for use with InitPlus
 func (p *Proj) GetDef() string {
 	return C.GoString(C.pj_get_def(p.proj, 0))
 }
 
-//TransformRaw transforms the x/y/z points from the source coordinate system to the destination coordinate system.
-//zs can be nil or must have the same length as xs and ys.
+// TransformRaw transforms the x/y/z points from the source coordinate system to the destination coordinate system.
+// zs can be nil or must have the same length as xs and ys.
 func TransformRaw(src *Proj, dst *Proj, xs []float64, ys []float64, zs []float64) error {
 
 	if len(xs) != len(ys) {
@@ -137,7 +138,7 @@ func TransformRaw(src *Proj, dst *Proj, xs []float64, ys []float64, zs []float64
 
 var geomPointSize = (C.int)(unsafe.Sizeof(geom.Point{}) / unsafe.Sizeof(float64(0.0)))
 
-//TransformPoints transforms the points inplace from the source coordinate system to the destination coordinate system.
+// TransformPoints transforms the points inplace from the source coordinate system to the destination coordinate system.
 func TransformPoints(src *Proj, dst *Proj, points []geom.Point) error {
 
 	errno := C.pj_transform(src.proj, dst.proj,
@@ -155,24 +156,24 @@ func TransformPoints(src *Proj, dst *Proj, points []geom.Point) error {
 
 }
 
-//Transformation projects coordinates from a source to a destination
+// Transformation projects coordinates from a source to a destination
 type Transformation struct {
 	src *Proj
 	dst *Proj
 }
 
-//NewTransformation initializes a new transformation with src and dst
+// NewTransformation initializes a new transformation with src and dst
 func NewTransformation(src, dst *Proj) (Transformation, error) {
 	return Transformation{src, dst}, nil
 }
 
-//TransformRaw transforms the x/y/z points from the source coordinate system to the destination coordinate system.
-//zs can be nil or must have the same length as xs and ys.
+// TransformRaw transforms the x/y/z points from the source coordinate system to the destination coordinate system.
+// zs can be nil or must have the same length as xs and ys.
 func (t Transformation) TransformRaw(xs, ys, zs []float64) error {
 	return TransformRaw(t.src, t.dst, xs, ys, zs)
 }
 
-//TransformPoints transforms the points inplace from the source coordinate system to the destination coordinate system.
+// TransformPoints transforms the points inplace from the source coordinate system to the destination coordinate system.
 func (t Transformation) TransformPoints(points []geom.Point) error {
 	return TransformPoints(t.src, t.dst, points)
 }
